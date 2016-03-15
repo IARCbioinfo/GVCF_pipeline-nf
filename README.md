@@ -1,6 +1,14 @@
 ## GVCF_pipeline-nf
 ### Nextflow pipeline for generate GVCF from BAM with GenomeAnalysisTK with step of realignment 
 
+#### Pipeline skeleton
+The pipeline is seperated in four chained nextflow processes:
+
+1. A BAM realignement process, which desaligns and realigns BAM files.
+2. An indel realignment process, which performs a local realignment around indels.
+3. A recalibration process from realigned BAM files.
+4. A GVCF build process from recalibrated BAM files.
+
 #### Dependencies
 1. Install [Samtools](https://github.com/samtools/samtools).
 2. Install [bwa](http://bio-bwa.sourceforge.net/)
@@ -36,3 +44,19 @@ Also copy or move in your path ```samtools```, ```bwa``` and ```sambamba```.
              
 - ```--out_folder ```: Output folder (default: results_realignment).
 - ```--intervals_gvcf```: Bed file provided to GATK HaplotypeCaller.
+
+All the parameters you want to use can be defined globally in your ```~/.nextflow/config``` file as the following example:
+
+```bash
+profiles {
+	standard {
+                params {
+                   hg19_ref = '/appli57/reference/GATK_Bundle/ucsc.hg19.fasta'
+                   dbsnp = '/appli57/reference/GATK_Bundle/dbsnp_138.hg19_noMT.vcf'
+                   GenomeAnalysisTK = '/appli57/GenomeAnalysisTK/GATK-3.4-0/GenomeAnalysisTK.jar'
+                   gold_std_indels = '/appli57/reference/GATK_Bundle/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf'
+                   phase1_indels = '/appli57/reference/GATK_Bundle/1000G_phase1.indels.hg19.sites.vcf'
+                }
+
+}
+```
