@@ -60,3 +60,10 @@ profiles {
 
 }
 ```
+
+## BAM realignment pipeline
+
+If you just want to desalign and realign your BAM files in order to precisely control the alignment, you can use the nextflow script `bam_realignment.nf`.
+This pipeline use an optimized combination of `samtools`, `bwa mem` and `sambamba` in one command line with pipes.
+
+#### Parameters
