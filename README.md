@@ -1,3 +1,7 @@
+# GVCF pipeline with realignment step
+- [GVCF pipeline](https://github.com/IARCbioinfo/GVCF_pipeline-nf#gvcf_pipeline-nf)
+- [BAM realignment](https://github.com/IARCbioinfo/GVCF_pipeline-nf#bam-realignment-pipeline)
+
 ## GVCF_pipeline-nf
 ### Nextflow pipeline for generate GVCF from BAM with GenomeAnalysisTK with step of realignment 
 
