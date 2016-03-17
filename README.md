@@ -1,7 +1,3 @@
-# GVCF pipeline with realignment step
-- [GVCF pipeline](https://github.com/IARCbioinfo/GVCF_pipeline-nf#gvcf_pipeline-nf)
-- [BAM realignment](https://github.com/IARCbioinfo/GVCF_pipeline-nf#bam-realignment-pipeline)
-
 ## GVCF_pipeline-nf
 ### Nextflow pipeline for generate GVCF from BAM with GenomeAnalysisTK with step of realignment 
 
@@ -21,13 +17,15 @@ The pipeline is seperated in four chained nextflow processes:
 
 Install [nextflow](http://www.nextflow.io/).
 
-	```bash
-	curl -fsSL get.nextflow.io | bash
-	```
-	And move it to a location in your `$PATH` (`/usr/local/bin` for example here):
-	```bash
-	sudo mv nextflow /usr/local/bin
-	```
+```
+curl -fsSL get.nextflow.io | bash
+```
+
+And move it to a location in your `$PATH` (`/usr/local/bin` for example here):
+```
+sudo mv nextflow /usr/local/bin
+```
+
 Also copy or move in your path ```samtools```, ```bwa``` and ```sambamba```.
 
 #### Parameters
@@ -64,10 +62,3 @@ profiles {
 
 }
 ```
-
-## BAM realignment pipeline
-
-If you just want to desalign and realign your BAM files in order to precisely control the alignment, you can use the nextflow script `bam_realignment.nf`.
-This pipeline use an optimized combination of `samtools`, `bwa mem` and `sambamba` in one command line with pipes.
-
-#### Parameters
