@@ -50,6 +50,7 @@ bams = Channel.fromPath( params.bam_folder+'/*.bam' )
 process bam_realignment {
 
     memory = params.mem+'GB'
+    cpu = params.cpu
   
     tag { bam_tag }
 
@@ -77,6 +78,7 @@ process bam_realignment {
 process indel_realignment {
 
     memory = params.mem+'GB'
+    cpu = params.cpu
 
     tag { bam_tag }
 
@@ -92,7 +94,7 @@ process indel_realignment {
     shell:
     '''
     set -e
-    java -jar !{params.GenomeAnalysisTK} -T RealignerTargetCreator -nt 6 -R !{fasta_ref} -I !{bam_tag}_realigned.bam -known !{params.gold_std_indels} -known !{params.phase1_indels} -o !{bam_tag}_target_intervals.list
+    java -jar !{params.GenomeAnalysisTK} -T RealignerTargetCreator -nt !{params.cpu} -R !{fasta_ref} -I !{bam_tag}_realigned.bam -known !{params.gold_std_indels} -known !{params.phase1_indels} -o !{bam_tag}_target_intervals.list
     java -jar !{params.GenomeAnalysisTK} -T IndelRealigner -R !{fasta_ref} -I !{bam_tag}_realigned.bam -targetIntervals !{bam_tag}_target_intervals.list -known !{params.gold_std_indels} -known !{params.phase1_indels} -o !{bam_tag}_realigned2.bam
     '''
 }
@@ -100,6 +102,7 @@ process indel_realignment {
 process recalibration {
 
     memory = params.mem+'GB'
+    cpu = params.cpu
 
     tag { bam_tag }
 
@@ -125,6 +128,7 @@ process recalibration {
 process GVCF {
 
     memory = params.mem+'GB'
+    cpu = params.cpu
 
     publishDir params.out_folder, mode: 'move'
 
