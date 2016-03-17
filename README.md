@@ -28,10 +28,18 @@ sudo mv nextflow /usr/local/bin
 
 Also copy or move in your path ```samtools```, ```bwa``` and ```sambamba```.
 
+#### Command
+
+Example:
+```
+nextflow run iarcbioinfo/GVCF_pipeline-nf --bam_folder BAM_test/
+```
+if all other mandatory parameters are defined in your ```~/.nextflow/config```.
+
 #### Parameters
 ##### Mandatory
 - ```--bam_folder```: Folder containing BAM files to be called.
-- ```--hg19_ref```: Reference fasta file (with index) (excepted if in your config).
+- ```--fasta_ref```: Reference fasta file (with index) (excepted if in your config).
 - ```--GenomeAnalysisTK```: GenomeAnalysisTK.jar file.
 - ```--gold_std_indels```: Gold standard GATK for indels.
 - ```--phase1_indels```: Phase 1 GATK for indels.
@@ -39,12 +47,12 @@ Also copy or move in your path ```samtools```, ```bwa``` and ```sambamba```.
 
 ##### Optional
 - ```--cpu```: Number of cpu used by bwa mem and sambamba (default: 8).
-- ```--mem```: Size of memory used by sambamba (in GB) (default: 32).
+- ```--mem```: Size of memory used by sambamba and bwa mem (in GB) (default: 32).
 - ```--RG```: Samtools read group specification with "\t" between fields (Default: "ID:bam_file_name\tSM:bam_file_name").
  
              e.g. --RG "PL:ILLUMINA\tDS:custom_read_group".
              
-- ```--out_folder ```: Output folder (default: results_realignment).
+- ```--out_folder ```: Output folder (default: results_GVCF_pipeline).
 - ```--intervals_gvcf```: Bed file provided to GATK HaplotypeCaller.
 
 All the parameters you want to use can be defined globally in your ```~/.nextflow/config``` file as the following example:
