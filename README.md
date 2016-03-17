@@ -13,7 +13,8 @@ The pipeline is seperated in four chained nextflow processes:
 1. Install [Samtools](https://github.com/samtools/samtools).
 2. Install [bwa](http://bio-bwa.sourceforge.net/)
 3. Install [Sambamba](https://github.com/lomereiter/sambamba/releases).
-4. Download [GATK tools](https://www.broadinstitute.org/gatk/download/).
+4. Install [Samblaster](https://github.com/GregoryFaust/samblaster)
+5. Download [GATK tools](https://www.broadinstitute.org/gatk/download/).
 
 Install [nextflow](http://www.nextflow.io/).
 
