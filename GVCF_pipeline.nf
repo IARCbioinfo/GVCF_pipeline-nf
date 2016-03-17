@@ -1,6 +1,6 @@
 #! /usr/bin/env nextflow
 
-// usage : ./GVCF_pipeline.nf --bam_folder BAM/ --cpu 8 --mem 32 --hg19_ref hg19.fasta --RG "PL:ILLUMINA"
+// usage : ./GVCF_pipeline.nf --bam_folder BAM/ --cpu 8 --mem 32 --fasta_ref hg19.fasta --RG "PL:ILLUMINA"
 
 if (params.help) {
     log.info ''
@@ -13,7 +13,7 @@ if (params.help) {
     log.info ''
     log.info 'Mandatory arguments:'
     log.info '    --bam_folder          FOLDER                  Folder containing BAM files to be called.'
-    log.info '    --hg19_ref            FILE                    Reference fasta file (with index) (excepted if in your config).'
+    log.info '    --fasta_ref            FILE                    Reference fasta file (with index) (excepted if in your config).'
     log.info '    --gold_std_indels     FILE                    Gold standard GATK for indels.'
     log.info '    --phase1_indels       FILE                    Phase 1 GATK for indels.'
     log.info '    --GenomeAnalysisTK    FILE                    GenomeAnalysisTK.jar file.'
@@ -33,6 +33,15 @@ params.RG = ""
 params.cpu = 8
 params.mem = 32
 params.out_folder="results_GVCF_pipeline"
+fasta_ref = file(params.fasta_ref)
+fasta_ref_fai = file( params.fasta_ref+'.fai' )
+fasta_ref_sa = file( params.fasta_ref+'.sa' )
+fasta_ref_bwt = file( params.fasta_ref+'.bwt' )
+fasta_ref_ann = file( params.fasta_ref+'.ann' )
+fasta_ref_amb = file( params.fasta_ref+'.amb' )
+fasta_ref_pac = file( params.fasta_ref+'.pac' )
+fasta_ref_dict = file( params.fasta_ref.replace(".fasta",".dict") )
+
 intervals_gvcf = params.intervals_gvcf ? '-L '+params.intervals_gvcf : ""
 
 bams = Channel.fromPath( params.bam_folder+'/*.bam' )
@@ -46,6 +55,13 @@ process bam_realignment {
 
     input:
     file bam from bams
+    file fasta_ref
+    file fasta_ref_fai
+    file fasta_ref_sa
+    file fasta_ref_bwt
+    file fasta_ref_ann
+    file fasta_ref_amb
+    file fasta_ref_pac
 
     output:
     set val(bam_tag), file("${bam_tag}_realigned.bam"), file("${bam_tag}_realigned.bam.bai") into outputs_bam_realignment
@@ -53,7 +69,8 @@ process bam_realignment {
     shell:
     bam_tag = bam.baseName
     '''
-    samtools collate -uOn 128 !{bam_tag}.bam tmp_!{bam_tag} | samtools fastq - | bwa mem -M -t!{params.cpu} -R "@RG\tID:!{bam_tag}\tSM:!{bam_tag}\t!{params.RG}" -p !{params.hg19_ref} - | samblaster --addMateTags | sambamba view -S -f bam -l 0 /dev/stdin | sambamba sort -t !{params.cpu} -m !{params.mem}G --tmpdir=!{bam_tag}_tmp -o !{bam_tag}_realigned.bam /dev/stdin
+    set -o pipefail
+    samtools collate -uOn 128 !{bam_tag}.bam tmp_!{bam_tag} | samtools fastq - | bwa mem -M -t!{params.cpu} -R "@RG\tID:!{bam_tag}\tSM:!{bam_tag}\t!{params.RG}" -p !{fasta_ref} - | samblaster --addMateTags | sambamba view -S -f bam -l 0 /dev/stdin | sambamba sort -t !{params.cpu} -m !{params.mem}G --tmpdir=!{bam_tag}_tmp -o !{bam_tag}_realigned.bam /dev/stdin
     '''
 }
 
@@ -65,14 +82,18 @@ process indel_realignment {
 
     input:
     set val(bam_tag), file("${bam_tag}_realigned.bam"), file("${bam_tag}_realigned.bam.bai")  from outputs_bam_realignment
+    file fasta_ref
+    file fasta_ref_fai
+    file fasta_ref_dict
 
     output:
     set val(bam_tag), file("${bam_tag}_realigned2.bam"), file("${bam_tag}_realigned2.bai")  into outputs_indel_realignment
 
     shell:
     '''
-    java -jar !{params.GenomeAnalysisTK} -T RealignerTargetCreator -nt 6 -R !{params.hg19_ref} -I !{bam_tag}_realigned.bam -known !{params.gold_std_indels} -known !{params.phase1_indels} -o !{bam_tag}_target_intervals.list
-    java -jar !{params.GenomeAnalysisTK} -T IndelRealigner -R !{params.hg19_ref} -I !{bam_tag}_realigned.bam -targetIntervals !{bam_tag}_target_intervals.list -known !{params.gold_std_indels} -known !{params.phase1_indels} -o !{bam_tag}_realigned2.bam
+    set -e
+    java -jar !{params.GenomeAnalysisTK} -T RealignerTargetCreator -nt 6 -R !{fasta_ref} -I !{bam_tag}_realigned.bam -known !{params.gold_std_indels} -known !{params.phase1_indels} -o !{bam_tag}_target_intervals.list
+    java -jar !{params.GenomeAnalysisTK} -T IndelRealigner -R !{fasta_ref} -I !{bam_tag}_realigned.bam -targetIntervals !{bam_tag}_target_intervals.list -known !{params.gold_std_indels} -known !{params.phase1_indels} -o !{bam_tag}_realigned2.bam
     '''
 }
 
@@ -84,16 +105,20 @@ process recalibration {
 
     input:
     set val(bam_tag), file("${bam_tag}_realigned2.bam"), file("${bam_tag}_realigned2.bai")  from outputs_indel_realignment
+    file fasta_ref
+    file fasta_ref_fai
+    file fasta_ref_dict
 
     output:
     set val(bam_tag), file("${bam_tag}_realigned_recal.bam"), file("${bam_tag}_realigned_recal.bai") into outputs_recalibration
 
     shell:
     '''
-    java -jar !{params.GenomeAnalysisTK} -T BaseRecalibrator -nct !{params.cpu} -R !{params.hg19_ref} -I !{bam_tag}_realigned2.bam -knownSites !{params.dbsnp} -knownSites !{params.gold_std_indels} -knownSites !{params.phase1_indels} -o !{bam_tag}_recal.table
-    java -jar !{params.GenomeAnalysisTK} -T BaseRecalibrator -nct !{params.cpu} -R !{params.hg19_ref} -I !{bam_tag}_realigned2.bam -knownSites !{params.dbsnp} -knownSites !{params.gold_std_indels} -knownSites !{params.phase1_indels} -BQSR !{bam_tag}_recal.table -o !{bam_tag}_post_recal.table
-    java -jar !{params.GenomeAnalysisTK} -T AnalyzeCovariates -R !{params.hg19_ref} -before !{bam_tag}_recal.table -after !{bam_tag}_post_recal.table -plots !{bam_tag}_recalibration_plots.pdf
-    java -jar !{params.GenomeAnalysisTK} -T PrintReads -nct !{params.cpu} -R !{params.hg19_ref} -I !{bam_tag}_realigned2.bam -BQSR !{bam_tag}_recal.table -o !{bam_tag}_realigned_recal.bam
+    set -e
+    java -jar !{params.GenomeAnalysisTK} -T BaseRecalibrator -nct !{params.cpu} -R !{fasta_ref} -I !{bam_tag}_realigned2.bam -knownSites !{params.dbsnp} -knownSites !{params.gold_std_indels} -knownSites !{params.phase1_indels} -o !{bam_tag}_recal.table
+    java -jar !{params.GenomeAnalysisTK} -T BaseRecalibrator -nct !{params.cpu} -R !{fasta_ref} -I !{bam_tag}_realigned2.bam -knownSites !{params.dbsnp} -knownSites !{params.gold_std_indels} -knownSites !{params.phase1_indels} -BQSR !{bam_tag}_recal.table -o !{bam_tag}_post_recal.table
+    java -jar !{params.GenomeAnalysisTK} -T AnalyzeCovariates -R !{fasta_ref} -before !{bam_tag}_recal.table -after !{bam_tag}_post_recal.table -plots !{bam_tag}_recalibration_plots.pdf
+    java -jar !{params.GenomeAnalysisTK} -T PrintReads -nct !{params.cpu} -R !{fasta_ref} -I !{bam_tag}_realigned2.bam -BQSR !{bam_tag}_recal.table -o !{bam_tag}_realigned_recal.bam
     '''
 }
 
@@ -107,6 +132,9 @@ process GVCF {
 
     input:
     set val(bam_tag), file("${bam_tag}_realigned_recal.bam"), file("${bam_tag}_realigned_recal.bai") from outputs_recalibration
+    file fasta_ref
+    file fasta_ref_fai
+    file fasta_ref_dict
     
     output:
     file("${bam_tag}_raw_calls.g.vcf") into output_gvcf
@@ -114,7 +142,7 @@ process GVCF {
 
     shell:
     '''
-    java -jar !{params.GenomeAnalysisTK} -T HaplotypeCaller -nct !{params.cpu} -R !{params.hg19_ref} -I !{bam_tag}_realigned_recal.bam --emitRefConfidence GVCF !{intervals_gvcf} -o !{bam_tag}_raw_calls.g.vcf
+    java -jar !{params.GenomeAnalysisTK} -T HaplotypeCaller -nct !{params.cpu} -R !{fasta_ref} -I !{bam_tag}_realigned_recal.bam --emitRefConfidence GVCF !{intervals_gvcf} -o !{bam_tag}_raw_calls.g.vcf
     '''
 }
 
