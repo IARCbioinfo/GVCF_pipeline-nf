@@ -49,8 +49,8 @@ bams = Channel.fromPath( params.bam_folder+'/*.bam' )
 
 process bam_realignment {
 
-    memory = params.mem+'GB'
-    cpu = params.cpu
+    cpus params.cpu
+    memory params.mem+'GB'  
   
     tag { bam_tag }
 
@@ -77,8 +77,8 @@ process bam_realignment {
 
 process indel_realignment {
 
-    memory = params.mem+'GB'
-    cpu = params.cpu
+    cpus params.cpu
+    memory params.mem+'GB'  
 
     tag { bam_tag }
 
@@ -101,8 +101,8 @@ process indel_realignment {
 
 process recalibration {
 
-    memory = params.mem+'GB'
-    cpu = params.cpu
+    cpus params.cpu
+    memory params.mem+'GB'  
 
     tag { bam_tag }
 
@@ -127,8 +127,8 @@ process recalibration {
 
 process GVCF {
 
-    memory = params.mem+'GB'
-    cpu = params.cpu
+    cpus params.cpu
+    memory params.mem+'GB'  
 
     publishDir params.out_folder, mode: 'move'
 
@@ -149,14 +149,6 @@ process GVCF {
     java -jar !{params.GenomeAnalysisTK} -T HaplotypeCaller -nct !{params.cpu} -R !{fasta_ref} -I !{bam_tag}_realigned_recal.bam --emitRefConfidence GVCF !{intervals_gvcf} -o !{bam_tag}_raw_calls.g.vcf
     '''
 }
-
-
-
-
-
-
-
-
 
 
 
