@@ -50,7 +50,7 @@ bams = Channel.fromPath( params.bam_folder+'/*.bam' )
 process bam_realignment {
 
     cpus params.cpu
-    memory params.mem+'GB'  
+    clusterOptions '-R "rusage[mem=' + params.mem + '000]" -M ' + params.mem + '000'  
   
     tag { bam_tag }
 
@@ -78,7 +78,7 @@ process bam_realignment {
 process indel_realignment {
 
     cpus params.cpu
-    memory params.mem+'GB'  
+    clusterOptions '-R "rusage[mem=' + params.mem + '000]" -M ' + params.mem + '000'
 
     tag { bam_tag }
 
@@ -102,7 +102,7 @@ process indel_realignment {
 process recalibration {
 
     cpus params.cpu
-    memory params.mem+'GB'  
+    clusterOptions '-R "rusage[mem=' + params.mem + '000]" -M ' + params.mem + '000' 
 
     tag { bam_tag }
 
@@ -128,7 +128,7 @@ process recalibration {
 process GVCF {
 
     cpus params.cpu
-    memory params.mem+'GB'  
+    clusterOptions '-R "rusage[mem=' + params.mem + '000]" -M ' + params.mem + '000'
 
     publishDir params.out_folder, mode: 'move'
 
