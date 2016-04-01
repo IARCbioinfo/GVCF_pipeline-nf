@@ -20,7 +20,7 @@ if (params.help) {
     log.info 'Optional arguments:'
     log.info '    --reserved_cpu        INTEGER                 Number of cpu reserved by nextflow (default: 8).'
     log.info '    --used_cpu            INTEGER                 Number of cpu used by bwa mem and sambamba (default: 8).'
-    log.info '    --mem                 INTEGER                 Size of memory used by sambamba (in GB) (default: 32).'
+    log.info '    --mem                 INTEGER                 Size of memory allocated by nextflow (default: 32).'
     log.info '    --RG                  STRING                  Samtools read group specification with "\t" between fields.'
     log.info '                                                  e.g. --RG "PL:ILLUMINA\tDS:custom_read_group".'
     log.info '                                                  Default: "ID:bam_file_name\tSM:bam_file_name".'
