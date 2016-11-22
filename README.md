@@ -1,5 +1,5 @@
 ## GVCF_pipeline-nf
-### Nextflow pipeline for generate GVCF from BAM with GenomeAnalysisTK with step of realignment 
+### Nextflow pipeline for generating GVCF from BAM with GenomeAnalysisTK with step of realignment 
 
 #### Pipeline skeleton
 The pipeline is seperated in four chained nextflow processes:
